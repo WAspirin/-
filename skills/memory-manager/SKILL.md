@@ -1,6 +1,7 @@
 ---
 name: memory-manager
-description: 记忆管理与上下文追踪技能。用于记录、检索、整理对话历史、重要事件、用户偏好和待办事项。当需要记住某事、回忆过去对话、管理待办或整理记忆文件时使用。
+description: 记忆管理与上下文追踪技能。用于：(1) 记录重要事件、用户偏好、待办事项到 memory/ 目录，(2) 检索过去对话和历史记录，(3) 整理过期记忆到 MEMORY.md，(4) 心跳时段的记忆维护。当 WonderXi 说"记住这个"、询问过去的事情、或需要管理长期记忆时使用。NOT for: 临时性信息、可通过其他文件推断的内容。
+metadata: { "openclaw": { "emoji": "🧠", "requires": { "files": ["MEMORY.md", "memory/*.md"] } } }
 ---
 
 # 记忆管理器 (Memory Manager)

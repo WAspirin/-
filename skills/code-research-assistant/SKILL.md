@@ -1,6 +1,7 @@
 ---
 name: code-research-assistant
-description: 代码与科研辅助技能。处理编程、数据分析、文献检索、实验记录等严谨工作。当 WonderXi 进入工作模式、需要写代码、分析数据、或处理科研任务时自动切换到此模式。
+description: 代码与科研辅助技能。用于：(1) 编程开发和代码审查，(2) 数据分析和可视化，(3) 文献检索和实验记录，(4) 科研文档管理。当 WonderXi 进入工作模式、需要写代码、分析数据、或处理科研任务时使用。NOT for: 日常闲聊、简单提醒（用 daily-assistant）。
+metadata: { "openclaw": { "emoji": "💻", "requires": { "bins": ["git", "python3"], "tools": ["exec", "read", "write", "edit"] } } }
 ---
 
 # 代码与科研助手 (Code & Research Assistant)

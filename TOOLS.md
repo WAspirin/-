@@ -13,6 +13,16 @@ Things like:
 - Device nicknames
 - Anything environment-specific
 
+---
+
+## 🔐 Git / GitHub
+
+- **仓库**: `git@github.com:WAspirin/-.git`
+- **分支**: `master`
+- **用户**: Sophon Bot <sophon@openclaw.local>
+- **接入时间**: 2026-03-02
+- **能力**: 可读取仓库内容、提交更改、推送代码
+
 ## Examples
 
 ```markdown

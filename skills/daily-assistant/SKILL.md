@@ -1,6 +1,7 @@
 ---
 name: daily-assistant
-description: 日常助手技能。处理天气查询、定时提醒、简单日程管理、主动检查（日历/邮件/通知）。当 WonderXi 询问天气、设置提醒、或需要主动检查某些事情时使用。
+description: 日常助手技能。用于：(1) 天气查询和预报，(2) 设置定时提醒和 cron 任务，(3) 简单日程管理，(4) 主动检查（日历/邮件/通知/项目状态），(5) 心跳时段的日常检查。当 WonderXi 询问天气、说"提醒我..."、设置日程、或需要主动检查某些事情时使用。NOT for: 复杂工作流、需要严谨分析的科研任务（用 code-research-assistant）。
+metadata: { "openclaw": { "emoji": "📅", "requires": { "tools": ["tts", "message"], "files": ["HEARTBEAT.md"] } } }
 ---
 
 # 日常助手 (Daily Assistant)
