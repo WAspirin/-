@@ -22,6 +22,22 @@ Things like:
 - **用户**: Sophon Bot <sophon@openclaw.local>
 - **接入时间**: 2026-03-02
 - **能力**: 可读取仓库内容、提交更改、推送代码
+- **Webhook Handler**: `github-webhook-handler.sh`
+- **自动学习**: 每天自动 pull 仓库，分析新内容（cron: github-auto-pull）
+
+### Webhook 配置
+
+- **Handler 脚本**: `/root/.openclaw/workspace/github-webhook-handler.sh`
+- **日志文件**: `/root/.openclaw/workspace/logs/github-webhook.log`
+- **配置指南**: `GITHUB_WEBHOOK_SETUP.md`
+- **Gateway 端口**: 18789
+- **Webhook URL**: `http://localhost:18789/webhook/github`
+
+### Cron 任务
+
+| 任务名 | 频率 | 用途 |
+|--------|------|------|
+| `github-auto-pull` | 每天 1 次 | 自动拉取 GitHub 仓库，学习新内容 |
 
 ## Examples
 
