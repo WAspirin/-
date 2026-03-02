@@ -1,0 +1,36 @@
+{
+  "name": "cable-optimization-daily-study",
+  "schedule": "0 9 * * *",
+  "timezone": "Asia/Shanghai",
+  "enabled": true,
+  "task": "每天学习一个新的线缆布线优化算法，实现代码并更新 GitHub 仓库",
+  "learning_plan": {
+    "week1": [
+      "粒子群优化 (PSO)",
+      "模拟退火 (SA)",
+      "A* 搜索算法",
+      "最小生成树 (Prim/Kruskal)",
+      "变邻域搜索 (VNS)"
+    ],
+    "week2": [
+      "禁忌搜索 (TS)",
+      "蚁群算法 (ACO)",
+      "DQN 基础",
+      "强化学习建模",
+      "案例研究"
+    ],
+    "week3": [
+      "GNN 入门",
+      "混合算法设计",
+      "性能基准测试",
+      "技术报告",
+      "周总结"
+    ]
+  },
+  "deliverables": {
+    "code": "examples/ 目录下添加新算法实现",
+    "docs": "docs/ 目录下更新学习笔记",
+    "report": "docs/daily-report.md 记录每日学习",
+    "commit": "提交到 GitHub 仓库"
+  }
+}
