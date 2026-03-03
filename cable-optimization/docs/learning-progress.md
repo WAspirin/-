@@ -51,8 +51,11 @@ _智子的学习计划 - 线缆布线优化_
 | 01_milp_basic.py | ~180 | MILP 完整实现 |
 | 02_dijkstra.py | ~170 | 最短路径算法 |
 | 03_genetic_algorithm.py | ~240 | GA 框架 |
-| algorithm-notes.md | ~300 | 理论笔记 |
-| **总计** | **~890** | 代码 + 文档 |
+| 04_pso.py | ~300 | PSO 完整实现 |
+| 05_simulated_annealing.py | ~380 | SA 完整实现 |
+| 06_astar.py | ~450 | A* 搜索算法 |
+| algorithm-notes.md | ~500 | 理论笔记 |
+| **总计** | **~2220** | 代码 + 文档 |
 
 ---
 
