@@ -1592,3 +1592,367 @@ for each episode:
 ---
 
 _最后更新：2026-03-09 by 智子_
+
+---
+
+## 📅 Day 10 新增内容 (2026-03-10) - Week 3 开始
+
+### 4.1 图神经网络 (Graph Neural Network, GNN)
+
+**核心思想**:
+- 使用神经网络直接处理图结构数据
+- 通过消息传递机制 (Message Passing) 聚合邻居信息
+- 学习节点的向量表示 (Node Embedding)
+- 应用于节点分类、边预测、图分类等任务
+
+**为什么需要 GNN**:
+- 传统 CNN/RNN 处理欧几里得数据（图像、序列）
+- 现实世界数据多为图结构（社交网络、分子结构、交通网络）
+- GNN 能够捕捉图的拓扑结构和节点特征
+
+---
+
+#### 图卷积网络 (Graph Convolutional Network, GCN)
+
+**论文**: Kipf & Welling (2017). Semi-Supervised Classification with Graph Convolutional Networks
+
+**核心公式**:
+```
+H^{(l+1)} = σ(D^{-1/2} Ã D^{-1/2} H^{(l)} W^{(l)})
+
+其中:
+- Ã = A + I (添加自环的邻接矩阵)
+- D 是度矩阵，D_ii = Σ_j Ã_ij
+- H^{(l)} 是第 l 层的节点表示
+- W^{(l)} 是可学习权重矩阵
+- σ 是激活函数 (ReLU)
+```
+
+**直观理解**:
+1. **添加自环**: 每个节点也考虑自己的特征
+2. **归一化**: D^{-1/2} Ã D^{-1/2} 确保数值稳定
+3. **聚合**: 每个节点聚合邻居的特征（加权平均）
+4. **变换**: 通过权重矩阵 W 进行线性变换
+5. **激活**: 引入非线性
+
+**单层 GCN 的 Python 实现**:
+```python
+def graph_convolution(node_features, adj_matrix, weights):
+    # 添加自环
+    adj_with_self = adj_matrix + np.eye(n_nodes)
+    
+    # 计算度矩阵
+    degrees = np.sum(adj_with_self, axis=1)
+    d_inv_sqrt = np.diag(1.0 / np.sqrt(degrees))
+    
+    # 归一化邻接矩阵
+    norm_adj = d_inv_sqrt @ adj_with_self @ d_inv_sqrt
+    
+    # 图卷积
+    output = norm_adj @ node_features @ weights
+    
+    # ReLU 激活
+    output = np.maximum(0, output)
+    
+    return output
+```
+
+---
+
+#### 图注意力网络 (Graph Attention Network, GAT)
+
+**论文**: Veličković et al. (2018). Graph Attention Networks
+
+**核心思想**: 使用注意力机制学习邻居节点的重要性权重
+
+**注意力系数计算**:
+```
+α_ij = exp(LeakyReLU(a^T [Wh_i || Wh_j])) / Σ_k∈N(i) exp(LeakyReLU(a^T [Wh_i || Wh_k]))
+
+其中:
+- h_i, h_j: 节点 i 和 j 的特征
+- W: 可学习权重矩阵
+- a: 可学习注意力向量
+- ||: 拼接操作
+- N(i): 节点 i 的邻居集合
+```
+
+**多头注意力 (Multi-Head Attention)**:
+- 使用 K 个独立的注意力头
+- 每个头学习不同的表示子空间
+- 输出拼接或平均
+
+**优势**:
+- 自适应学习邻居重要性（不是均匀聚合）
+- 可解释性强（注意力权重可视化）
+- 适用于异构图（不同类型的邻居）
+
+---
+
+#### 消息传递神经网络 (Message Passing Neural Network, MPNN)
+
+**通用框架**: Gilmer et al. (2017). Neural Message Passing for Quantum Chemistry
+
+**消息传递阶段**:
+```
+for t = 1 to T:
+    # 消息函数
+    m_{i←j} = M_t(h_i, h_j, e_ij)  # 从 j 到 i 的消息
+    
+    # 聚合函数
+    m_i = Σ_{j∈N(i)} m_{i←j}  # 聚合所有邻居消息
+    
+    # 更新函数
+    h_i^{(t+1)} = U_t(h_i^{(t)}, m_i)  # 更新节点表示
+```
+
+**读出阶段**:
+```
+y = R({h_i^{(T)} | i ∈ G})  # 从节点表示得到图级输出
+```
+
+**统一视角**: GCN、GAT 都是 MPNN 的特例
+
+---
+
+#### GNN 在线缆布线中的应用
+
+**问题建模**:
+
+| 组件 | 定义 | 特征 |
+|------|------|------|
+| 节点 | 设备/接线盒位置 | 位置 (x,y)、类型、容量 |
+| 边 | 可能的布线路径 | 距离、成本、容量限制 |
+| 图 | 完整布线网络 | 邻接矩阵 + 特征矩阵 |
+
+**应用场景**:
+
+**1. 节点嵌入学习**:
+```python
+# 学习每个节点的向量表示
+embeddings = GNN(node_features, adj_matrix)
+
+# 相似嵌入的节点可能有相似功能
+# 可用于节点分类、聚类
+```
+
+**2. 边预测**:
+```python
+# 预测两个节点之间是否应该有连接
+prob = sigmoid(dot(embeddings[i], embeddings[j]))
+
+# 用于推荐最优布线路径
+```
+
+**3. 路径规划指导**:
+```python
+# 使用 GNN 嵌入指导搜索
+def gnn_heuristic(node, target):
+    # 嵌入相似度作为启发式
+    return cosine_similarity(embeddings[node], embeddings[target])
+
+# 结合 A* 搜索
+f(n) = g(n) + λ * gnn_heuristic(n, target)
+```
+
+**4. 端到端路径生成**:
+```python
+# 使用序列模型 + GNN
+# 输入：图结构 + 起点/终点
+# 输出：路径序列
+```
+
+---
+
+#### 节点特征设计
+
+**对于线缆布线问题**:
+
+```python
+node_features = [
+    # 1-2. 归一化位置
+    norm_x, norm_y,
+    
+    # 3-4. 到起点/终点的距离
+    dist_to_start / max_dist,
+    dist_to_end / max_dist,
+    
+    # 5. 局部密度
+    n_neighbors_in_radius / total_nodes,
+    
+    # 6-7. 节点类型 (one-hot)
+    is_start_node, is_end_node,
+    
+    # 8. 容量需求
+    required_capacity / max_capacity,
+]
+```
+
+**特征工程技巧**:
+- 位置归一化到 [0, 1]
+- 距离特征提供全局信息
+- 局部密度捕捉图结构
+- 类型特征帮助区分特殊节点
+
+---
+
+#### 训练策略
+
+**1. 自监督学习 (无标签)**:
+```python
+# 任务：重构邻接矩阵
+# 输入：节点特征 + 邻接矩阵
+# 输出：预测的边概率
+# 损失：BCE(pred_edge, true_edge)
+
+loss = -Σ [y_ij * log(p_ij) + (1-y_ij) * log(1-p_ij)]
+```
+
+**2. 监督学习 (有标签)**:
+```python
+# 任务：预测最优路径
+# 输入：图结构 + 起点/终点
+# 输出：路径上每条边的概率
+# 损失：交叉熵或路径长度
+
+loss = Σ cost(e) * p(e)  # 期望路径成本
+```
+
+**3. 强化学习**:
+```python
+# 任务：学习路径规划策略
+# Agent: GNN + 策略网络
+# 奖励：-路径成本
+# 算法：策略梯度或 Actor-Critic
+```
+
+---
+
+#### 参数调优指南
+
+| 参数 | 推荐范围 | 说明 |
+|------|----------|------|
+| 隐藏层维度 | 32-256 | 太小欠拟合，太大过拟合 |
+| 网络层数 | 2-4 | 太多导致过平滑 (Over-smoothing) |
+| 学习率 | 0.001-0.01 | Adam 优化器 |
+| Dropout | 0.1-0.5 | 防止过拟合 |
+| 批量大小 | 16-64 | 图级别批量或节点级别批量 |
+
+**过平滑问题 (Over-smoothing)**:
+- 现象：多层 GCN 后，所有节点嵌入趋同
+- 原因：多次聚合后，节点特征被"平均化"
+- 解决：限制层数 (2-4 层)、使用残差连接、跳跃连接
+
+---
+
+#### 与强化学习对比
+
+| 特性 | GNN | DQN/PPO |
+|------|-----|---------|
+| 输入 | 图结构 | 状态向量 |
+| 归纳偏置 | 图结构先验 | 无/序列先验 |
+| 泛化能力 | 强（不同图结构） | 弱（固定状态空间） |
+| 训练数据 | 需要图数据集 | 需要环境交互 |
+| 适用场景 | 图结构问题 | 序列决策问题 |
+
+**混合方法 (GNN + RL)**:
+- GNN 编码图结构 → 节点嵌入
+- RL 基于嵌入做决策 → 路径规划
+- 结合两者优势
+
+---
+
+#### 代码实现要点
+
+**GNN 主循环**:
+```python
+class SimpleGNN:
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        self.gc1 = GraphConvolution(input_dim, hidden_dim)
+        self.gc2 = GraphConvolution(hidden_dim, output_dim)
+    
+    def forward(self, node_features, adj_matrix):
+        h = self.gc1(node_features, adj_matrix)
+        h = self.gc2(h, adj_matrix)
+        return h  # 节点嵌入
+```
+
+**边预测**:
+```python
+def predict_edge(emb_i, emb_j):
+    # 内积 + Sigmoid
+    score = np.dot(emb_i, emb_j)
+    prob = 1 / (1 + np.exp(-score))
+    return prob
+```
+
+**路径规划**:
+```python
+def plan_path_gnn(gnn, graph, start, end):
+    embeddings = gnn.forward(graph.features, graph.adj)
+    
+    path = [start]
+    current = start
+    
+    while current != end:
+        neighbors = graph.get_neighbors(current)
+        
+        # 选择嵌入最接近终点的邻居
+        best = max(neighbors, 
+                   key=lambda n: cosine_similarity(embeddings[n], embeddings[end]))
+        
+        path.append(best)
+        current = best
+    
+    return path
+```
+
+---
+
+#### 实战案例：20 节点线缆布线
+
+**问题设置**:
+- 20 个设备随机分布在 100×100 区域
+- 起点固定在 (5, 5)，终点在 (95, 95)
+- 构建完全图（所有节点对都有边）
+- 目标：学习节点嵌入，规划最优路径
+
+**GNN 配置**:
+```
+输入维度：5 (位置 + 距离 + 密度)
+隐藏维度：64
+输出维度：32
+网络层数：2
+训练迭代：100
+```
+
+**预期结果**:
+```
+训练损失：~0.69 → ~0.55
+边预测准确率：~50% → ~75%
+GNN 规划路径成本：~XXX (取决于随机种子)
+```
+
+**关键洞察**:
+1. GNN 能够学习图的拓扑结构
+2. 节点嵌入包含位置和连接信息
+3. 嵌入相似度可指导路径搜索
+4. 自监督学习无需标注数据
+
+---
+
+### 📊 Week 3 学习计划
+
+| Day | 主题 | 状态 |
+|-----|------|------|
+| 10 | GNN 入门 | ✅ 今日完成 |
+| 11 | 混合算法设计 (GA+LS) | 📝 计划中 |
+| 12 | 多目标优化 | 📝 计划中 |
+| 13 | 大规模问题求解 | 📝 计划中 |
+| 14 | 技术报告撰写 | 📝 计划中 |
+| 15 | 完整文档整理 | 📝 计划中 |
+| 16 | 月总结 + 下一步计划 | 📝 计划中 |
+
+---
+
+_最后更新：2026-03-10 by 智子_

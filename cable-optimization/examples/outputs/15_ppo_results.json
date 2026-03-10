@@ -1,0 +1,10 @@
+{
+  "algorithm": "PPO",
+  "grid_size": 10,
+  "n_obstacles": 15,
+  "training_episodes": 100,
+  "final_avg_reward": -9.999999999999979,
+  "test_path_length": 100,
+  "test_total_reward": -9.99999999999998,
+  "reached_goal": false
+}

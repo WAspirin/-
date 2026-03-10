@@ -1,0 +1,11 @@
+{
+  "n_nodes": 20,
+  "path": [
+    0,
+    19
+  ],
+  "path_length": 2,
+  "total_cost": 127.27922061357856,
+  "embedding_dim": 32,
+  "training_iterations": 100
+}
