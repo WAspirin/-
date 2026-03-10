@@ -197,13 +197,13 @@ class DynamicObstacle:
     def predict_future_positions(self, steps: int = None) -> List[Tuple[int, int]]:
         if steps is None:
             steps = self.prediction_horizon
-        return [(int(self.x + self.vx * t), int(self.y + self.vy * t)) for t in range(1, steps + 1)]
+        return [(int(round(self.x + self.vx * t)), int(round(self.y + self.vy * t))) for t in range(1, steps + 1)]  # 修复：四舍五入取整
     
     def get_current_mask(self, height: int, width: int) -> np.ndarray:
         mask = np.zeros((height, width), dtype=np.bool_)
         for dx in range(-self.size//2, self.size//2 + 1):
             for dy in range(-self.size//2, self.size//2 + 1):
-                x, y = self.x + dx, self.y + dy
+                x, y = int(self.x + dx), int(self.y + dy)  # 修复：转换为整数
                 if 0 <= x < height and 0 <= y < width:
                     mask[x, y] = True
         return mask
@@ -337,8 +337,8 @@ class LocalSWRDQNController:
         
         for i in range(self.obs_size):
             for j in range(self.obs_size):
-                gx = x - half_size + i
-                gy = y - half_size + j
+                gx = int(x - half_size + i)  # 修复：确保整数
+                gy = int(y - half_size + j)
                 
                 if 0 <= gx < grid_map.shape[0] and 0 <= gy < grid_map.shape[1]:
                     obs[0, i, j] = grid_map[gx, gy]  # 通道 0: 静态障碍
@@ -349,7 +349,7 @@ class LocalSWRDQNController:
                         
                         # 通道 2-4: 未来 3 步预测
                         for t, (px, py) in enumerate(obstacle.predict_future_positions(3)):
-                            if px == gx and py == gy:
+                            if int(px) == gx and int(py) == gy:  # 修复：整数比较
                                 obs[2 + t, i, j] = 1.0
                 else:
                     obs[0, i, j] = 1.0
