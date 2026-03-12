@@ -2190,4 +2190,288 @@ k_max：5
 
 ---
 
-_最后更新：2026-03-11 by 智子_
+---
+
+## 2.18 多目标优化 - NSGA-II
+
+**学习日期**: 2026-03-12  
+**所属周次**: Week 3 Day 12
+
+### 核心思想
+
+多目标优化处理**多个相互冲突的目标**，寻找 Pareto 最优解集而非单一最优解。
+
+**线缆布线中的多目标问题**:
+- 目标 1：最小化成本（线缆长度）
+- 目标 2：最小化风险（最大化可靠性）
+
+这两个目标通常冲突：最短路径可能经过高风险区域，而避开风险会增加长度。
+
+### Pareto 最优概念
+
+**支配关系**: 解 A 支配解 B 当且仅当：
+1. A 的所有目标都不差于 B
+2. A 至少有一个目标严格优于 B
+
+**Pareto 最优解**: 不被任何其他解支配的解
+
+**Pareto 前沿**: 所有 Pareto 最优解在目标空间的集合
+
+```
+目标 2 (风险)
+    ↑
+    |    ·  ·  ·
+    |   ·  Pareto 前沿
+    |  ·  (非支配解集)
+    | ·
+    |·
+    +----------------→ 目标 1 (成本)
+    
+    · = 被支配解
+    · = Pareto 最优解
+```
+
+### NSGA-II 算法流程
+
+**快速非支配排序 (Fast Non-dominated Sorting)**:
+```
+1. 计算每个个体的支配计数和被支配集合
+2. 支配计数为 0 的个体放入第 1 层 (F1)
+3. 对 F1 中每个个体，减少其支配个体的计数
+4. 计数变为 0 的个体放入 F2
+5. 重复直到所有个体分层
+```
+
+**拥挤度距离 (Crowding Distance)**:
+```
+目的：保持解的多样性，避免聚集
+
+计算步骤:
+1. 对每个目标，按该目标值排序
+2. 边界点拥挤度设为无穷大
+3. 中间点拥挤度 = 相邻两点目标值差 / 目标范围
+
+拥挤度大 = 周围解稀疏 = 更值得保留
+```
+
+**选择机制**:
+```
+锦标赛选择:
+- 随机选择 k 个个体
+- 优先选择等级 (rank) 好的
+- 等级相同时选择拥挤度大的
+```
+
+**精英保留**:
+```
+1. 合并父代和子代 (2N 个个体)
+2. 快速非支配排序
+3. 从 F1 开始依次加入新种群
+4. 当某层无法全部加入时，按拥挤度选择
+```
+
+### 算法伪代码
+
+```
+初始化种群 P0 (大小 N)
+评估所有个体
+
+for t = 0 to max_generations:
+    # 快速非支配排序
+    fronts = fast_non_dominated_sort(Pt)
+    
+    # 计算拥挤度
+    for front in fronts:
+        calculate_crowding_distance(front)
+    
+    # 选择、交叉、变异生成子代 Qt
+    Qt = []
+    while len(Qt) < N:
+        p1 = tournament_selection(Pt)
+        p2 = tournament_selection(Pt)
+        child = crossover(p1, p2)
+        child = mutate(child)
+        Qt.append(child)
+    
+    评估 Qt
+    
+    # 精英保留
+    Rt = Pt ∪ Qt  # 合并，大小 2N
+    fronts = fast_non_dominated_sort(Rt)
+    
+    Pt+1 = []
+    i = 0
+    while len(Pt+1) + |Fi| <= N:
+        Pt+1 = Pt+1 ∪ Fi
+        i = i + 1
+    
+    # 处理最后一层
+    Fi = fronts[i]
+    calculate_crowding_distance(Fi)
+    Fi.sort(by=crowding_distance, descending)
+    Pt+1 = Pt+1 ∪ Fi[:(N - len(Pt+1))]
+
+返回 F1 (Pareto 前沿)
+```
+
+### 关键参数
+
+| 参数 | 推荐值 | 说明 |
+|------|--------|------|
+| 种群大小 | 100-200 | 影响 Pareto 前沿覆盖度 |
+| 最大迭代 | 200-500 | 影响收敛程度 |
+| 交叉率 | 0.8-0.95 | 高交叉率促进探索 |
+| 变异率 | 0.05-0.2 | 维持多样性 |
+| 锦标赛大小 | 2-5 | 影响选择压力 |
+
+### 与其他多目标方法对比
+
+| 方法 | 原理 | 优点 | 缺点 |
+|------|------|------|------|
+| **NSGA-II** | 非支配排序 + 拥挤度 | 收敛快、分布均匀 | 参数较多 |
+| 权重法 | 加权和转化为单目标 | 简单直接 | 无法获得非凸 Pareto 前沿 |
+| ε-约束法 | 一个目标为主，其余为约束 | 可处理非凸前沿 | ε 值选择困难 |
+| MOEA/D | 分解为多个子问题 | 计算效率高 | 分解方式影响结果 |
+| SPEA2 | 强度 Pareto 进化 | 档案维护好 | 计算复杂度 O(N³) |
+
+### 在线缆布线中的应用
+
+**问题建模**:
+```python
+目标 1: min 总长度 = Σ distance(path[i], path[i+1])
+目标 2: min 总风险 = Σ risk(path[i], path[i+1])
+
+约束:
+- 路径从起点开始，到终点结束
+- 不重复访问节点
+- 可选：最大长度限制、最大风险限制
+```
+
+**Trade-off 分析**:
+```
+决策者可以从 Pareto 前沿选择:
+1. 最小成本解：预算有限时
+2. 最小风险解：可靠性优先时
+3. 折中解：平衡考虑
+
+关键指标：边际替代率
+= Δ成本 / Δ风险
+表示为减少 1 单位风险需要增加多少成本
+```
+
+### 代码实现要点
+
+**1. 支配关系判断**:
+```python
+def dominates(ind1, ind2):
+    not_worse = all(o1 <= o2 for o1, o2 in zip(ind1.obj, ind2.obj))
+    strictly_better = any(o1 < o2 for o1, o2 in zip(ind1.obj, ind2.obj))
+    return not_worse and strictly_better
+```
+
+**2. 拥挤度计算**:
+```python
+# 对每个目标分别计算
+for m in range(num_objectives):
+    sorted_front = sorted(front, key=lambda ind: ind.objectives[m])
+    sorted_front[0].crowding = float('inf')
+    sorted_front[-1].crowding = float('inf')
+    
+    obj_range = sorted_front[-1].objectives[m] - sorted_front[0].objectives[m]
+    for i in range(1, len(sorted_front) - 1):
+        sorted_front[i].crowding += (
+            (sorted_front[i+1].objectives[m] - sorted_front[i-1].objectives[m]) / obj_range
+        )
+```
+
+**3. 精英保留选择**:
+```python
+# 按层加入，最后一层按拥挤度排序
+new_pop = []
+for front in fronts:
+    if len(new_pop) + len(front) <= N:
+        new_pop.extend(front)
+    else:
+        front.sort(key=lambda ind: -ind.crowding_distance)
+        new_pop.extend(front[:(N - len(new_pop))])
+        break
+```
+
+### 可视化方法
+
+**1. Pareto 前沿图**:
+- X 轴：目标 1（成本）
+- Y 轴：目标 2（风险）
+- 标记 Pareto 最优解
+
+**2. 收敛曲线**:
+- Pareto 前沿大小随迭代变化
+- 平均目标值收敛情况
+
+**3. 路径对比图**:
+- 展示不同 Pareto 解的实际路径
+- 对比最小成本、最小风险、折中解
+
+### 实战案例：20 节点线缆布线
+
+**问题设置**:
+- 20 个设备随机分布在 100×100 网格
+- 每个节点有随机风险值 (0-1)
+- 起点和终点固定
+
+**NSGA-II 配置**:
+```
+种群大小：100
+迭代次数：200
+交叉率：0.9
+变异率：0.15
+锦标赛大小：3
+```
+
+**预期结果**:
+```
+Pareto 前沿大小：~15-25 个解
+最小长度解：长度~200-300, 风险~8-12
+最小风险解：长度~350-450, 风险~3-5
+折中解：长度~280, 风险~6-8
+```
+
+**关键洞察**:
+1. Pareto 前沿呈现明显的 trade-off 曲线
+2. 从最小成本到最小风险，长度增加约 50-80%
+3. 风险降低约 50-60%
+4. 边际替代率递减（越往后代价越大）
+
+### 扩展方向
+
+**1. 更多目标**:
+- 添加第三目标：最小化转弯次数
+- 添加第四目标：最大化冗余度
+
+**2. 约束处理**:
+- 最大长度约束
+- 最大风险阈值
+- 必须经过某些节点
+
+**3. 混合改进**:
+- NSGA-II + 局部搜索
+- NSGA-III (处理 3+ 目标)
+- 自适应参数调整
+
+---
+
+### 📊 Week 3 学习计划
+
+| Day | 主题 | 状态 |
+|-----|------|------|
+| 10 | GNN 入门 | ✅ 完成 |
+| 11 | 混合算法设计 (GA+LS) | ✅ 完成 |
+| 12 | 多目标优化 (NSGA-II) | ✅ 今日完成 |
+| 13 | 大规模问题求解 | 📝 计划中 |
+| 14 | 技术报告撰写 | 📝 计划中 |
+| 15 | 完整文档整理 | 📝 计划中 |
+| 16 | 月总结 + 下一步计划 | 📝 计划中 |
+
+---
+
+_最后更新：2026-03-12 by 智子_
