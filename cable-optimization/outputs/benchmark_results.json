@@ -1,0 +1,80 @@
+{
+  "test_scales": [
+    100,
+    200,
+    500
+  ],
+  "results": [
+    {
+      "n_nodes": 100,
+      "results": [
+        {
+          "algorithm": "贪心最近邻",
+          "cost": 915.1698958980057,
+          "time": 0.0018165111541748047,
+          "path_length": 100,
+          "success": true
+        },
+        {
+          "algorithm": "分解算法 (k=7)",
+          "cost": 722.5639896558512,
+          "time": 0.07312536239624023,
+          "path_length": 109,
+          "success": true
+        },
+        {
+          "algorithm": "VNS",
+          "cost": 720.448526272708,
+          "time": 81.98106360435486,
+          "path_length": 100,
+          "success": true
+        },
+        {
+          "algorithm": "遗传算法",
+          "cost": 1861.3854020439976,
+          "time": 1.8485486507415771,
+          "path_length": 100,
+          "success": true
+        }
+      ]
+    },
+    {
+      "n_nodes": 200,
+      "results": [
+        {
+          "algorithm": "贪心最近邻",
+          "cost": 1281.5139075353618,
+          "time": 0.0072286128997802734,
+          "path_length": 200,
+          "success": true
+        },
+        {
+          "algorithm": "分解算法 (k=10)",
+          "cost": 1079.723791736209,
+          "time": 0.22404026985168457,
+          "path_length": 200,
+          "success": true
+        }
+      ]
+    },
+    {
+      "n_nodes": 500,
+      "results": [
+        {
+          "algorithm": "贪心最近邻",
+          "cost": 1945.9294746951573,
+          "time": 0.04091024398803711,
+          "path_length": 500,
+          "success": true
+        },
+        {
+          "algorithm": "分解算法 (k=15)",
+          "cost": 1700.4515959942216,
+          "time": 1.508687973022461,
+          "path_length": 497,
+          "success": true
+        }
+      ]
+    }
+  ]
+}
