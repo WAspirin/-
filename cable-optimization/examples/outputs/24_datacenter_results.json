@@ -1,0 +1,7 @@
+{
+  "total_cables": 128,
+  "total_length": 608.9311701893323,
+  "total_cost": 3280.024443807108,
+  "avg_latency": 23.786373835520788,
+  "redundant_count": 80
+}
