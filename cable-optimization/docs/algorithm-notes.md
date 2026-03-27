@@ -4062,3 +4062,305 @@ python examples/28_algorithm_selection_guide.py
 _最后更新：2026-03-26_  
 _总算法数：28 种（含 5 个案例研究 + 选择指南）_  
 _代码总量：~15,200 行 | 文档总量：~47,000 行_
+
+---
+
+## 🔬 十、基准测试框架 (Day 27 - 2026-03-27)
+
+### 10.1 为什么需要基准测试？
+
+经过 27 天的学习，我们已经实现了 28 种算法和 5 个实际案例。现在需要一个**系统性的评估框架**来：
+
+1. **公平对比**: 在统一测试集上评估所有算法
+2. **性能分析**: 量化算法的时间/质量权衡
+3. **可复现性**: 确保结果可重复验证
+4. **指导选择**: 为实际问题提供数据驱动的算法推荐
+
+### 10.2 基准测试设计原则
+
+#### 1. 测试用例设计
+
+| 维度 | 选项 | 说明 |
+|------|------|------|
+| 规模 | 小/中/大 | 10/30/50 节点 |
+| 密度 | 稀疏/稠密 | 30%/60% 连接率 |
+| 源汇点 | 单源/多源 | 1-5 个源点和汇点 |
+| 约束 | 简单/复杂 | 仅连接/容量 + 几何约束 |
+
+#### 2. 评估指标
+
+**主要指标**:
+- **解的质量**: 总成本 (越低越好)
+- **计算效率**: 运行时间 (秒)
+- **成功率**: 找到可行解的比例
+
+**次要指标**:
+- 收敛速度 (迭代次数)
+- 稳定性 (多次运行的标准差)
+- 可扩展性 (随规模增长的性能变化)
+
+#### 3. 实验设计
+
+```
+对于每个 (算法，测试用例) 组合:
+  运行 N 次 (不同随机种子)
+  记录每次的成本、时间、迭代次数
+  计算统计量：均值、标准差、最优/最劣
+```
+
+### 10.3 基准测试框架架构
+
+```
+BenchmarkFramework
+├── TestCase (测试用例生成)
+│   ├── 节点坐标生成
+│   ├── 边网络构建
+│   └── 源汇点选择
+├── Algorithm Registry (算法注册)
+│   ├── 统一接口定义
+│   └── 算法封装
+├── Test Runner (测试执行)
+│   ├── 单次测试
+│   ├── 批量测试
+│   └── 异常处理
+├── Statistics (统计分析)
+│   ├── 按算法分组
+│   ├── 按测试用例分组
+│   └── 总体统计
+└── Visualizer (可视化)
+    ├── 成本对比箱线图
+    ├── 时间对比图
+    ├── 成本 - 时间散点图
+    └── 成功率柱状图
+```
+
+### 10.4 核心数据结构
+
+#### TestCase
+```python
+@dataclass
+class TestCase:
+    name: str                    # 测试用例名称
+    num_nodes: int               # 节点数
+    num_edges: int               # 边数
+    num_sources: int             # 源点数
+    num_sinks: int               # 汇点数
+    capacity_range: Tuple        # 容量范围
+    cost_range: Tuple            # 成本范围
+    description: str             # 描述
+    
+    def generate_network(seed=42) -> Dict:
+        # 生成网络拓扑
+        return {
+            'nodes': np.array,    # 节点坐标
+            'edges': List[Dict],  # 边列表
+            'sources': List[int], # 源点索引
+            'sinks': List[int]    # 汇点索引
+        }
+```
+
+#### BenchmarkResult
+```python
+@dataclass
+class BenchmarkResult:
+    algorithm_name: str          # 算法名称
+    test_case_name: str          # 测试用例
+    seed: int                    # 随机种子
+    solution_cost: float         # 解的成本
+    computation_time: float      # 计算时间 (秒)
+    iterations: int              # 迭代次数
+    success: bool                # 是否成功
+    error_message: str           # 错误信息 (可选)
+```
+
+### 10.5 统一算法接口
+
+所有参与基准测试的算法需遵循统一接口:
+
+```python
+def algorithm_name(network: Dict) -> Dict:
+    """
+    算法统一接口
+    
+    参数:
+        network: Dict {
+            'nodes': np.array (N, 2),    # 节点坐标
+            'edges': List[Dict],         # 边列表
+            'sources': List[int],        # 源点
+            'sinks': List[int]           # 汇点
+        }
+    
+    返回:
+        Dict {
+            'cost': float,               # 总成本
+            'iterations': int,           # 迭代次数
+            'selected_edges': List,      # 选中的边
+            'path': np.array (可选)      # 路径
+        }
+    """
+    # 算法实现
+    return result
+```
+
+### 10.6 统计分析方法
+
+#### 按算法分组统计
+```python
+for each algorithm:
+    mean_cost = mean(costs across all tests)
+    std_cost = std(costs)
+    mean_time = mean(times)
+    success_rate = successful_tests / total_tests
+```
+
+#### 按测试用例分组统计
+```python
+for each test_case:
+    best_algorithm = argmin(mean_cost)
+    cost_range = [min_cost, max_cost]
+    time_range = [min_time, max_time]
+```
+
+#### 显著性检验 (可选)
+```python
+# 使用 t 检验或 ANOVA 判断算法间差异是否显著
+from scipy import stats
+t_stat, p_value = stats.ttest_ind(algo1_costs, algo2_costs)
+if p_value < 0.05:
+    print("差异显著")
+```
+
+### 10.7 可视化设计
+
+#### 1. 成本对比箱线图
+- X 轴：算法名称
+- Y 轴：解的成本
+- 显示：中位数、四分位数、异常值
+- 用途：直观对比算法质量分布
+
+#### 2. 时间对比箱线图
+- X 轴：算法名称
+- Y 轴：计算时间 (秒)
+- 用途：评估算法效率
+
+#### 3. 成本 - 时间散点图
+- X 轴：计算时间
+- Y 轴：解的成本
+- 每个点：一次测试运行
+- 颜色：区分算法
+- 用途：识别 Pareto 最优前沿
+
+#### 4. 成功率柱状图
+- X 轴：算法名称
+- Y 轴：成功率 (%)
+- 用途：评估算法鲁棒性
+
+#### 5. 综合仪表板
+- 2×2 布局：4 个关键图表
+- 用途：快速概览整体性能
+
+### 10.8 使用示例
+
+```python
+from benchmark_framework import (
+    BenchmarkFramework, TestCase, BenchmarkVisualizer
+)
+
+# 1. 创建框架
+framework = BenchmarkFramework(output_dir='outputs/benchmarks')
+
+# 2. 添加测试用例
+framework.add_test_case(TestCase(
+    name='small_sparse',
+    num_nodes=10,
+    num_edges=30,
+    num_sources=2,
+    num_sinks=2,
+    capacity_range=(50, 100),
+    cost_range=(0.5, 2.0),
+    description='小规模稀疏网络'
+))
+
+# 3. 注册算法
+framework.register_algorithm('greedy', greedy_algorithm)
+framework.register_algorithm('ga', genetic_algorithm)
+framework.register_algorithm('vns', variable_neighborhood_search)
+
+# 4. 运行测试
+report = framework.run_all_tests(seeds=[42, 123, 456])
+
+# 5. 保存报告
+framework.save_report(report)
+
+# 6. 可视化
+visualizer = BenchmarkVisualizer(report)
+visualizer.generate_dashboard(save_dir='outputs/benchmarks/viz')
+```
+
+### 10.9 输出文件
+
+运行基准测试后生成:
+
+```
+outputs/benchmarks/
+├── benchmark_20260327_090000.json    # JSON 格式报告
+└── visualizations/
+    ├── cost_comparison.png           # 成本对比
+    ├── time_comparison.png           # 时间对比
+    ├── cost_time_scatter.png         # 散点图
+    ├── success_rate.png              # 成功率
+    └── benchmark_dashboard_*.png     # 综合仪表板
+```
+
+### 10.10 扩展方向
+
+1. **更多测试用例**:
+   - 真实地理数据 (城市坐标)
+   - 标准测试集 (TSPLIB 等)
+   - 极端场景 (超大规模、强约束)
+
+2. **更多算法**:
+   - 集成已实现的 28 种算法
+   - 新算法快速接入
+
+3. **高级分析**:
+   - Pareto 前沿分析
+   - 算法聚类 (基于性能特征)
+   - 自动推荐系统
+
+4. **并行加速**:
+   - 多进程并行测试
+   - 分布式基准测试
+
+5. **Web 仪表板**:
+   - 交互式结果浏览
+   - 在线对比工具
+   - 结果分享功能
+
+### 10.11 代码实现
+
+**文件**: `examples/29_benchmark_framework.py` (~550 行)
+
+**核心类**:
+1. `TestCase`: 测试用例定义与网络生成
+2. `BenchmarkResult`: 单次测试结果
+3. `BenchmarkReport`: 完整测试报告
+4. `BenchmarkFramework`: 主框架 (注册、执行、统计)
+5. `BenchmarkVisualizer`: 可视化分析
+
+**依赖**:
+- numpy
+- matplotlib
+- seaborn
+- json
+
+**运行**:
+```bash
+python examples/29_benchmark_framework.py
+```
+
+---
+
+_最后更新：2026-03-27_  
+_总算法数：29 种（含基准测试框架）_  
+_代码总量：~15,750 行 | 文档总量：~48,000 行_
