@@ -820,7 +820,10 @@ class PerformanceBenchmark:
         plt.tight_layout()
         
         # 保存图片
-        output_path = 'cable-optimization/examples/outputs/31_telecom_optimization.png'
+        import os
+        output_dir = os.path.join(os.path.dirname(__file__), 'outputs')
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, '31_telecom_optimization.png')
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         print(f"\n✅ 可视化已保存：{output_path}")
         plt.close()
