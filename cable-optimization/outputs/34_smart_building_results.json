@@ -1,0 +1,15 @@
+{
+  "building_name": "智子科技大厦",
+  "floors": 5,
+  "total_rooms": 25,
+  "total_devices": 25,
+  "total_telecom_rooms": 5,
+  "statistics": {
+    "total_cable_length": 426.38636183892265,
+    "total_cost": 2049.159085516768,
+    "horizontal_cables": 25,
+    "backbone_cables": 5,
+    "avg_interference": 0.010416666666666666
+  },
+  "cable_paths_count": 30
+}
